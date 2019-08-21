@@ -1,18 +1,22 @@
 <template>
   <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+    <h2 class="title">甜橙金融测试工程师<br/>基础技能评测</h2>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import HelloWorld from '@/components/HelloWorld.vue'; // @ is an alias to /src
 
-@Component({
-  components: {
-    HelloWorld,
-  },
-})
+@Component
 export default class Home extends Vue {}
 </script>
+<style lang="stylus" scoped>
+.home
+  height 100%
+  background url('~assets/header-bg.png') no-repeat
+  background-size 100%
+  .title
+    color white
+    text-align center
+    padding-top 100px
+</style>
