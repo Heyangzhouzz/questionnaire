@@ -18,7 +18,7 @@
         <button v-if='index<questions.length-1' @click="next" class="button">下一题</button>
         <button v-else @click="submit" class="button">交 卷</button>
       </div>
-      <div class="footer-bar">
+      <div class="footer-bar" @click="checking=true">
         <div class="clock">
           <icon name="clock"></icon>
           {{"00:00:30"}}
@@ -26,6 +26,27 @@
         <icon name="upArrow" className="upArrow"></icon>
         <div class="count">
           {{"05/30"}}
+        </div>
+      </div>
+      <div class="mengc" @click.self="checking=false" v-if="checking">
+        <div class="check-box">
+          <div class="header" @click="checking=false">
+              <div class="clock">
+                <icon name="clock"></icon>
+                {{"00:00:30"}}
+              </div>
+              <icon name="upArrow" className="upArrow"></icon>
+              <div class="count">
+                {{"05/30"}}
+              </div>
+          </div>
+          <div class="body">
+              <span v-for="(item,index) in questions"
+              :class="{red:!item.currentAnswer.length}"
+              :key="index">
+                {{index+1}}.{{item.currentAnswer.length?item.currentAnswer.toString():"未答题"}}
+              </span>
+          </div>
         </div>
       </div>
   </div>
@@ -49,6 +70,8 @@ export default class Test extends Vue {
   index:number = 0
 
   currentAnswer:string[] = []
+
+  checking:boolean = false
 
   enterClass:string = 'slide-enter';
 
@@ -112,7 +135,7 @@ export default class Test extends Vue {
   transform: translateX(-105%);
 .slide-enter-active,.slide-leave-active
   transition: all .3s ease;
-.footer-bar
+.footer-bar,.check-box .header
   color #666
   margin-top 45px
   display flex
@@ -130,4 +153,34 @@ export default class Test extends Vue {
     width 30%
   .count
     text-align right
+.mengc
+  top 0
+  bottom 0
+  right 0
+  left 0
+  position fixed
+  background rgba(0,0,0,.1)
+  .check-box
+    position absolute
+    width 100%
+    bottom 0
+    background white
+    .header
+      margin-top 0
+      .upArrow
+        transform rotate(180deg)
+    .body
+      display flex
+      flex-wrap wrap
+      padding 20px
+      height 100px
+      overflow hidden
+      span
+        height 30px
+        font-size 28px
+        line-height 30px
+        margin 10px
+        color #666
+      .red
+        color red
 </style>
