@@ -31,7 +31,7 @@ export default new Vuex.Store({
           '因果图法、正交排列法、等价类划分法',
         ],
         type: 'single',
-        currentAnswer: ['A'],
+        currentAnswer: [],
       },
       {
         title: `某数据库中存在三个表，分别如下：<br/>

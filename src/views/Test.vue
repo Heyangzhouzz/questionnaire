@@ -16,16 +16,16 @@
       <div class="control-bar">
         <button @click="last" class="button" :disabled='index===0'>上一题</button>
         <button v-if='index<questions.length-1' @click="next" class="button">下一题</button>
-        <button v-else @click="submit" class="button">交 卷</button>
+        <button v-else @click="submitClick" class="button">交 卷</button>
       </div>
       <div class="footer-bar" @click="checking=true">
         <div class="clock">
           <icon name="clock"></icon>
-          {{"00:00:30"}}
+          {{formatTime}}
         </div>
         <icon name="upArrow" className="upArrow"></icon>
         <div class="count">
-          {{"05/30"}}
+          {{formatDouble(index+1)}}/{{formatDouble(questions.length)}}
         </div>
       </div>
       <div class="mengc" @click.self="checking=false" v-if="checking">
@@ -33,15 +33,17 @@
           <div class="header" @click="checking=false">
               <div class="clock">
                 <icon name="clock"></icon>
-                {{"00:00:30"}}
+                {{formatTime}}
               </div>
               <icon name="upArrow" className="upArrow"></icon>
               <div class="count">
-                {{"05/30"}}
+                {{formatDouble(index+1)}}/{{formatDouble(questions.length)}}
               </div>
           </div>
           <div class="body">
-              <span v-for="(item,index) in questions"
+              <span
+              v-for="(item,index) in questions"
+              @click="checkJump(index)"
               :class="{red:!item.currentAnswer.length}"
               :key="index">
                 {{index+1}}.{{item.currentAnswer.length?item.currentAnswer.toString():"未答题"}}
@@ -54,6 +56,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
+import { Dialog } from 'vant';
 import {
   Getter,
 } from 'vuex-class';
@@ -69,7 +72,10 @@ export default class Test extends Vue {
 
   index:number = 0
 
-  currentAnswer:string[] = []
+  time:number = 3600
+
+  timer:number
+
 
   checking:boolean = false
 
@@ -78,25 +84,110 @@ export default class Test extends Vue {
   leaveClass:string = 'slide-leave-to'
 
   get currentQuestin() {
-    const currentQuestin = this.questions[this.index];
-    this.currentAnswer = currentQuestin.currentAnswer;
-    return currentQuestin;
+    return this.questions[this.index];
+  }
+
+  get currentAnswer() {
+    return this.currentQuestin.currentAnswer;
+  }
+
+  set currentAnswer(val) {
+    this.currentQuestin.currentAnswer = val;
+  }
+
+  get formatTime() {
+    const hh = this.formatDouble(Math.floor(this.time / 3600));
+    const mm = this.formatDouble(Math.floor((this.time % 3600) / 60));
+    const ss = this.formatDouble(this.time % 60);
+    return `${hh}:${mm}:${ss}`;
+  }
+
+  formatDouble(num:number):string {
+    return num >= 10 ? `${num}` : `0${num}`;
   }
 
   last() {
     this.leaveClass = 'slide-enter';
     this.enterClass = 'slide-leave-to';
     this.index -= 1;
+    this.storageFlag();
   }
 
   next() {
     this.enterClass = 'slide-enter';
     this.leaveClass = 'slide-leave-to';
     this.index += 1;
+    this.storageFlag();
+  }
+
+  checkJump(index:number) {
+    this.checking = false;
+    this.enterClass = index > this.index ? 'slide-enter' : 'slide-leave-to';
+    this.leaveClass = index > this.index ? 'slide-leave-to' : 'slide-enter';
+    this.index = index;
+    this.storageFlag();
+  }
+
+  storageFlag() {
+    const flag = {
+      time: this.time,
+      answer: this.questions.map(item => item.currentAnswer),
+      index: this.index,
+    };
+    localStorage.setItem('answerFlag', JSON.stringify(flag));
+  }
+
+  submitClick() {
+    const notFinish = this.questions.some(item => !item.currentAnswer.length);
+    if (notFinish) {
+      Dialog.confirm({
+        title: '提示',
+        message: '您有未完成的题目，是否确认交卷',
+        confirmButtonText: '交卷',
+        confirmButtonColor: '#999999',
+        cancelButtonText: '继续答题',
+        cancelButtonColor: '#ff663c',
+
+      }).then(() => {
+        this.submit();
+      }).catch(() => {
+      });
+    } else {
+      this.submit();
+    }
   }
 
   submit() {
 
+  }
+
+
+  created() {
+    const answerFlag = JSON.parse(localStorage.getItem('answerFlag') || 'null');
+    if (answerFlag) {
+      this.time = answerFlag.time;
+      this.questions.forEach((item, index) => {
+        this.questions[index].currentAnswer = answerFlag.answer[index];
+      });
+      this.index = answerFlag.index;
+    }
+    this.timer = setInterval(() => {
+      if (this.time === 0) {
+        clearInterval(this.timer);
+        Dialog.alert({
+          title: '答题时间到',
+          message: '答题时间结束，请交卷',
+        }).then(() => {
+          this.submit();
+        });
+        return;
+      }
+      this.time -= 1;
+    }, 1000);
+  }
+
+  beforeDestroy() {
+    clearInterval(this.timer);
   }
 }
 </script>
@@ -173,13 +264,13 @@ export default class Test extends Vue {
       display flex
       flex-wrap wrap
       padding 20px
-      height 100px
+      padding-bottom 40px
       overflow hidden
       span
         height 30px
         font-size 28px
         line-height 30px
-        margin 10px
+        margin 15px 20px
         color #666
       .red
         color red
